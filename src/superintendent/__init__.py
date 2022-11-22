@@ -96,7 +96,7 @@ class Superintendent(widgets.VBox):
         if hasattr(self.labelling_widget, "on_undo"):
             self.labelling_widget.on_undo(self._undo)
 
-        self.queue = queue or DatabaseQueue(connection_string=database_url)
+        self.queue = queue or DatabaseQueue(connection_string=database_url, worker_id=worker_id)
         if self.queue.url == "sqlite:///:memory:":
             warnings.warn(
                 "You are using an in-memory SQLite database. Even when "
@@ -148,10 +148,12 @@ class Superintendent(widgets.VBox):
                     [self.progressbar],
                     layout=widgets.Layout(width="50%", justify_content="space-between"),
                 ),
+                widgets.HBox([widgets.Label(value=f"Rotulador: {self.queue.worker_id}")]
+                ),
                 widgets.HBox(
                     [self.retrain_button, self.model_performance],
                     layout=widgets.Layout(width="50%"),
-                ),
+                )
             ]
         )
         self.children = [self.top_bar, self.labelling_widget]
@@ -164,9 +166,9 @@ class Superintendent(widgets.VBox):
 
     # Workflow functionality ---------
     def _get_worker_id(self):
-        worker_id_field = widgets.Text(placeholder="Please enter your name or user ID.")
+        worker_id_field = widgets.Text(placeholder="Please enter your email as your user ID.")
         self.children = [
-            widgets.HTML(value="<h2>Please enter your name or user ID:</h2>"),
+            widgets.HTML(value="<h2>Please enter your email as your user ID:</h2>"),
             widgets.Box(
                 children=[worker_id_field],
                 layout=widgets.Layout(
@@ -182,6 +184,7 @@ class Superintendent(widgets.VBox):
             worker_id_field.on_submit(self._set_worker_id)
 
     def _set_worker_id(self, worker_id_field):
+        print(worker_id_field.value)
         if len(worker_id_field.value) > 0:
             self.queue.worker_id = worker_id_field.value
         self._begin_annotation()
